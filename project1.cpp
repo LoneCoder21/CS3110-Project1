@@ -14,9 +14,6 @@ description: Recognize floating point literals using dfa's
 date: 04/13/22
 */
 
-const int DEBUG_PRINT = 1;
-const int DETAIL_DEBUG_PRINT = 0;
-
 using namespace std;
 
 //function to process digits separately
@@ -408,11 +405,6 @@ pair<bool, float> computeDFA(const string& input) {
 	float v = 0.0f;
 
 	for (int i = 0; i < 4; ++i) {
-		if (DETAIL_DEBUG_PRINT) {
-			cout << "DFA " << i + 1 << ": ";
-			print(p[i]);
-		}
-
 		if (p[i].first) {
 			accept = p[i].first;
 			v = p[i].second;
@@ -422,25 +414,8 @@ pair<bool, float> computeDFA(const string& input) {
 	return make_pair(accept, v);
 }
 
-void test_cases() {
-	if (!DEBUG_PRINT) return;
-
-	vector<string> test_nums = { "", "123", "123f", "123e", "123e1", "123e1f", "+123f", "-123f",
-				"123.", ".", "123..2", "123.2.e1", "_", "_1__2.", "1__2.", "1__2_.",
-				"123._2", "123.2_e1", "123.2_e_1", "123.3e1" };
-
-	for (int i = 0; i < test_nums.size(); ++i) {
-		cout << "For string " << test_nums[i] << " ";
-		auto cd = computeDFA(test_nums[i]);
-
-		cout << "Final result: ";
-		print(cd);
-	}
-}
-
 int main()
 {
-	test_cases();
 
     
 
