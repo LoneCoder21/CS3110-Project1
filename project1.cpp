@@ -16,10 +16,19 @@ date: 04/13/22
 
 using namespace std;
 
-//function to process digits separately
+/*
+	Function to process digits separately	
+		- Handles underscores(_)
+	Parameters
+	1. input - input string to parse
+	2. st - index of starting point
+	3. val - value to store 
+	4. len - returns length of digits (used for calculating fractional component)
+*/
+
 bool processdigits(const string& input, int& st, float& val, int& len) {
-	bool accept = false;
-	int state = 1;
+	bool accept = false;//boolean to choose accept states
+	int state = 1;//varaiable to keep track of what state we are in
 
 	for (; st < input.size(); ++st) {
 		switch (input[st]) {
@@ -72,7 +81,11 @@ bool processdigits(const string& input, int& st, float& val, int& len) {
 	return accept;
 }
 
-pair<bool, float> mdfa1(const string& input)
+/*
+	DFA 1 - Digits . [Digits] [ExponentPart] [FloatTypeSuffix]
+*/
+
+pair<bool, float> dfa1(const string& input)
 {
 	int state = 0;
 	bool accept = false, dead = false;
@@ -88,7 +101,8 @@ pair<bool, float> mdfa1(const string& input)
 			if (state == 0 || state == 1)
 			{
 				state = 1;
-
+				
+				//calculate whole value
 				dead = !processdigits(input, i, value, len);
 				len = 0;
 			}
@@ -97,6 +111,7 @@ pair<bool, float> mdfa1(const string& input)
 				state = 2;
 				accept = true;
 
+				//calculate fractional value
 				dead = !processdigits(input, i, frac, len);
 				frac = frac / pow(10, len);
 			}
@@ -104,6 +119,7 @@ pair<bool, float> mdfa1(const string& input)
 			{
 				state = 5;
 				accept = true;
+				//calculate exponent
 				dead = !processdigits(input, i, exp, len);
 			}
 			else {
@@ -164,7 +180,11 @@ pair<bool, float> mdfa1(const string& input)
 	return make_pair(accept, value);
 }
 
-pair<bool, float> mdfa2(const string& input)
+/*
+	DFA 2 - . Digits [ExponentPart] [FloatTypeSuffix] 
+*/
+
+pair<bool, float> dfa2(const string& input)
 {
 	int state = 0;
 	bool accept = false, dead = false;
@@ -191,6 +211,7 @@ pair<bool, float> mdfa2(const string& input)
 				accept = true;
 				state = 2;
 
+				//calculate fractional value
 				dead = !processdigits(input, i, value, len);
 				value = value / pow(10, len);
 			}
@@ -198,6 +219,7 @@ pair<bool, float> mdfa2(const string& input)
 				accept = true;
 				state = 5;
 
+				//calculate exponent
 				dead = !processdigits(input, i, exp, len);
 			}
 			else {
@@ -240,14 +262,17 @@ pair<bool, float> mdfa2(const string& input)
 		}
 	}
 
-
 	value *= pow(10, sign * exp);
 	accept &= !dead;
 
 	return make_pair(accept, value);
 }
 
-pair<bool, float> mdfa3(const string& input)
+/*
+	DFA 3 - Digits ExponentPart [FloatTypeSuffix] 
+*/
+
+pair<bool, float> dfa3(const string& input)
 {
 	int state = 1;
 	bool accept = false, dead = false;
@@ -263,11 +288,13 @@ pair<bool, float> mdfa3(const string& input)
 			{
 				state = 2;
 
+				//calculate whole value
 				dead = !processdigits(input, i, value, len);
 			}
 			else if (state == 4 || state == 3) {
 				state = 4;
 
+				//calculate exponent
 				dead = !processdigits(input, i, exp, len);
 				accept = true;
 			}
@@ -317,7 +344,11 @@ pair<bool, float> mdfa3(const string& input)
 	return make_pair(accept, value);
 }
 
-pair<bool, float> mdfa4(const string& input)
+/*
+	DFA 4 - Digits [ExponentPart] FloatTypeSuffix
+*/
+
+pair<bool, float> dfa4(const string& input)
 {
 	int state = 1;
 	bool dead = false;
@@ -333,10 +364,12 @@ pair<bool, float> mdfa4(const string& input)
 			if (state == 1 || state == 2)
 			{
 				state = 2;
+				//calculate whole value
 				dead = !processdigits(input, i, value, len);
 			}
 			else if (state == 4 || state == 3) {
 				state = 4;
+				//calculate exponent
 				dead = !processdigits(input, i, exp, len);
 			}
 			else {
@@ -385,21 +418,14 @@ pair<bool, float> mdfa4(const string& input)
 	return make_pair(accept, value);
 }
 
-/*{
-	1. User input
-	2. Main loop 
-	5. Add comments
-	6. Explain how doing 4 DFA is same as one DFA
-	8. Write READ me
-	9. Create text file to submit for github link
-}*/
-
+//prints pair
 void print(const pair<bool, float>& p) {
 	cout << p.first << ' ' << p.second << endl;
 }
 
+//function to compute 4 individual DFA's to see if any of them accept the input
 pair<bool, float> computeDFA(const string& input) {
-	pair<bool, float> p[4] = { mdfa1(input), mdfa2(input), mdfa3(input), mdfa4(input) };
+	pair<bool, float> p[4] = { dfa1(input), dfa2(input), dfa3(input), dfa4(input) };
 
 	bool accept = false;
 	float v = 0.0f;
@@ -416,8 +442,22 @@ pair<bool, float> computeDFA(const string& input) {
 
 int main()
 {
+	string str;
+	pair<bool, float> dfa;
+	cout << "Enter a string (type 'q' to quit): ";
+	cin >> str;
 
+	while (str != "q") {
+		dfa = computeDFA(str);
+		if (dfa.first) {
+			cout << "Number is: " << setprecision(7) << dfa.second << endl;
+		}
+		else {
+			cout << "Invalid input" << endl;
+		}//if error exists then we report and move on to next input
+		cout << "Enter a string (type 'q' to quit): ";
+		cin >> str;
+	}
     
-
 	return 0;
 }
