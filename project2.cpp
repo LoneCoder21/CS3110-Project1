@@ -11,8 +11,8 @@
 /*
 Project 2 - CS 3110
 Group: Omar Suede, Abhinav Neelam
-description: Evaluate expressions using PDA
-date: 04/24/22
+Description: Evaluate expressions using CFG and PDA
+Date: 05/02/22
 */
 
 using namespace std;
@@ -27,17 +27,25 @@ using namespace std;
 	4. len - returns length of digits (used for calculating fractional component)
 */
 
-pair<bool, float> CA(const string& s, int left, int right);
-pair<bool, float> CP(const string& s, int left, int right);
-pair<bool, float> T(const string& s, int left, int right);
-pair<bool, float> F(const string& s, int left, int right);
-pair<bool, float> M(const string& s, int left, int right);
-pair<bool, float> CM(const string& s, int left, int right);
-pair<bool, float> A(const string& s, int left, int right);
-pair<bool, float> CA(const string& s, int left, int right);
-pair<bool, float> OP(const string& s, int left, int right);
-pair<bool, float> CSP(const string& s, int left, int right);
-pair<bool, float> S(const string& s, int left, int right);
+pair<bool, float> S(const string& str, int left, int right);
+pair<bool, float> T(const string& str, int left, int right);
+pair<bool, float> F(const string& str, int left, int right);
+
+void print(const pair<bool, float>& p) //prints pair
+{
+	cout << p.first << ' ' << p.second << endl;
+}
+
+string trim(const string& str) //to trim whitespaces at front and end of string
+{
+    size_t first = str.find_first_not_of(' ');
+    if (string::npos == first)
+    {
+        return str;
+    }
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last - first + 1));
+}
 
 bool processdigits(const string& input, int& st, float& val, int& len) {
 	bool accept = false;//boolean to choose accept states
@@ -431,13 +439,10 @@ pair<bool, float> dfa4(const string& input)
 	return make_pair(accept, value);
 }
 
-//prints pair
-void print(const pair<bool, float>& p) {
-	cout << p.first << ' ' << p.second << endl;
-}
-
 //function to compute 4 individual DFA's to see if any of them accept the input
-pair<bool, float> computeDFA(const string& input) {
+pair<bool, float> computeDFA(const string& s) {
+	string input = trim(s);
+
 	pair<bool, float> p[4] = { dfa1(input), dfa2(input), dfa3(input), dfa4(input) };
 
 	bool accept = false;
@@ -453,133 +458,76 @@ pair<bool, float> computeDFA(const string& input) {
 	return make_pair(accept, v);
 }
 
-// Function to find precedence of
-// operators.
+//computes parenthesized expressions or evaluates expression as floating point
+pair<bool, float> F(const string& str, int left, int right) {
+    string s = trim(str.substr(left,right-left+1));
+    auto cd = computeDFA(s);
 
-pair<bool, float> CA(const string& s, int left, int right) {
-    for(int i=left; i<right;++i) {
-		auto a = A(s, left, i);
-		auto t = T(s,i + 1,right);
+	if(cd.first) return cd;
+
+	if(s[0]=='(' && s.back()==')') {
+		auto csp = S(s,1,s.size()-2);
 		
-        if(a.first && t.first) return make_pair(true, t.second);
-    }
-    
-    return make_pair(false,0);
-}
-
-pair<bool, float> CP(const string& s, int left, int right) {
-    return make_pair(left==right && s[left]==')',0);
-}
-
-pair<bool, float> T(const string& s, int left, int right) {
-    //if(left==right) return make_pair(isdigit(s[left]), s[left] - '0');
-
-    auto cd = computeDFA(s.substr(left,right-left+1));
-	if(cd.first) return cd;
-
-	for(int i=left; i<right;++i) {
-		auto op = OP(s, left, i);
-		auto csp = CSP(s, i + 1, right);
-		if(op.first && csp.first) return make_pair(true, csp.second);
-    }
-
-    for(int i=left; i<right;++i) {
-		auto t = T(s, left, i);
-		auto cm = CM(s, i + 1, right);
-
-        if(t.first && cm.first) return make_pair(true,t.second * cm.second);
-    }
-    
-    return make_pair(false,0);
-}
-
-pair<bool, float> F(const string& s, int left, int right) {
-    //if(left==right) return make_pair(isdigit(s[left]), s[left] - '0');
-
-    auto cd = computeDFA(s.substr(left,right-left+1));
-	if(cd.first) return cd;
-
-    for(int i=left; i<right;++i) {
-		auto op = OP(s, left, i);
-		auto csp =  CSP(s,i+1,right);
-
-        if(op.first && csp.first) return make_pair(true, csp.second);
-    }
-    
-    return make_pair(false,0);
-}
-
-pair<bool, float> M(const string& s, int left, int right) {
-    return make_pair(left==right && (s[left]=='*'),0);
-}
-
-pair<bool, float> CM(const string& s, int left, int right) {
-    for(int i=left; i<right;++i) {
-		auto m = M(s, left, i);
-		auto f = F(s, i + 1, right);
-        if(m.first && f.first) return make_pair(true,f.second);
-    }
-    
-    return make_pair(false,0);
-}
-
-pair<bool, float> A(const string& s, int left, int right) {
-    return make_pair(left==right && (s[left]=='+'),0);
-}
-
-pair<bool, float> OP(const string& s, int left, int right) {
-    return make_pair(left==right && s[left]=='(',0);
-}
-
-pair<bool, float> CSP(const string& s, int left, int right) {
-    for(int i=left; i<right;++i) {
-		auto s0 = S(s, left, i);
-		auto cp = CP(s, i + 1, right);
-
-		if (s0.first && cp.first) return make_pair(true, s0.second);
-    }
-    
-    return make_pair(false,0);
-}
-
-pair<bool, float> S(const string& s, int left, int right) {
-    //if(left==right) return make_pair(isdigit(s[left]), s[left]-'0');
-
-	auto cd = computeDFA(s.substr(left,right-left+1));
-	if(cd.first) return cd;
-
-	for(int i=left; i<right;++i) {
-		auto op = OP(s, left, i);
-		auto csp =  CSP(s,i+1,right);
-
-		if(op.first && csp.first) return make_pair(true, csp.second);
-	}
-
-	for(int i=left; i<right;++i) {
-		auto t = T(s, left, i);
-		auto cm = CM(s,i+1,right);
-
-		if(t.first && cm.first) return make_pair(true, t.second * cm.second);
-	}
-
-	for(int i=left; i<right;++i) {
-		auto s0 = S(s, left, i);
-		auto ca = CA(s, i+1,right);
-		
-        if(s0.first && ca.first) return make_pair(true, s0.second + ca.second);
+        if(csp.first) return make_pair(true, csp.second);
 	}
 
     return make_pair(false,0);
 }
 
-pair<bool, float> isvalid(const string & s) {
+//computes multiplication and division expressions or evaluates expression as F
+pair<bool, float> T(const string& str, int left, int right) {
+    auto f = F(str,left,right);
+	if(f.first) return f;
+
+	for (int i = left; i < right; ++i) {
+		if (str[i] == '*') {
+			auto t = T(str, left, i-1);
+			auto f = F(str, i + 1, right);
+			
+			if(t.first && f.first) return make_pair(true,t.second*f.second);
+			
+		}else if(str[i]=='/') {
+		    auto t = T(str, left, i-1);
+			auto f = F(str, i + 1, right);
+			
+			if(t.first && f.first) return make_pair(true,t.second/f.second);	
+		}
+	}
+	
+	return make_pair(false,0);
+}
+
+//computes addition and subtraction expressions or evaluates expression as T
+pair<bool, float> S(const string& str, int left, int right) {
+	auto t = T(str,left,right);
+	if(t.first) return t;
+
+	for (int i = left; i < right; ++i) {
+		if (str[i] == '+') {
+			auto s = S(str, left, i-1);
+			auto t = T(str, i + 1, right);
+			
+			if(s.first && t.first) return make_pair(true, s.second + t.second);
+		}else if(str[i]=='-') {
+		    auto s = S(str, left, i-1);
+			auto t = T(str, i + 1, right);
+			
+			if(s.first && t.first) return make_pair(true, s.second - t.second);
+		}
+	}
+	
+	return make_pair(false,0);
+}
+
+//tries to compute good expression into single value and fails otherwise
+pair<bool, float> computeExpression(const string & s) {
     return S(s,0,s.size()-1);
 }
 
 int main()
 {
-	string input = "0.9*(0.9e+10)+1.0";
-	auto isv = isvalid(input);
+	string input = "5.0 *(    12.0 *(1.0 -    1.0)+3.0 )+100.0+ ( ( 9.0 ))   ";
+	auto isv = computeExpression(input);
 	
 	cout << isv.first << ' ' << isv.second << endl;
 
