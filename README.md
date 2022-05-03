@@ -25,6 +25,9 @@ For this project, we decided that it was easier and safer to use CFG method for 
 ### Additional/Specific Details:
 Each of the main functions in project 2 correspond to rules in the CFG. The functions return true and the floating point values if they successfully splitted the string into at least one of the substitutions used for that rule in the CFG. To check for terminal a, we used project1 code and computed DFA to return possible floating point value. 
 
+Spaces:
+To handle spaces, spaces can be everywhere except inbetween digits. For digits, underscores are used instead. This is solved by trim function which trims only the left and right parts of string.
+
 Grammar used is:
 
     <EXPR> → <EXPR> + <TERM> | <TERM>

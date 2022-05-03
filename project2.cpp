@@ -27,8 +27,7 @@ using namespace std;
 	4. len - returns length of digits (used for calculating fractional component)
 */
 
-pair<bool, float> EXPR
-(const string& str, int left, int right);
+pair<bool, float> EXPR(const string& str, int left, int right);
 pair<bool, float> TERM(const string& str, int left, int right);
 pair<bool, float> FACTOR(const string& str, int left, int right);
 
@@ -468,8 +467,7 @@ pair<bool, float> FACTOR(const string& str, int left, int right) {
 	//evaluate expression if string is floating point value
 
 	if(s[0]=='(' && s.back()==')') { //see whether string is surrounded by parenthesis
-		auto csp = EXPR
-		(s,1,s.size()-2);
+		auto csp = EXPR(s,1,s.size()-2);
 		
         if(csp.first) return make_pair(true, csp.second);
 	}
@@ -497,9 +495,14 @@ pair<bool, float> TERM(const string& str, int left, int right) {
 			
 			float tdf = t.second/f.second;
 			
-			if(t.first && f.first) return make_pair(isnormal(tdf),tdf);
-			//isnormal <cmath> function checks whether floating point value is a good value
-			//necessary to handle division by zero, overflows, etc...
+			if(t.first && f.first) return make_pair(true || isnormal(tdf),tdf);
+			
+			/*
+				isnormal <cmath> function checks whether floating point value is a good value
+				necessary to handle division by zero, overflows, etc...
+				However, we can assume that java spec handles floating point issues
+				We can also remove it quickly if need be.
+			*/
 		}
 	}
 	
@@ -515,14 +518,12 @@ pair<bool, float> EXPR(const string& str, int left, int right) {
 
 	for (int i = left; i < right; ++i) {
 		if (str[i] == '+') { //compute addition if both s and t are valid expressions
-			auto s = EXPR
-			(str, left, i-1);
+			auto s = EXPR(str, left, i-1);
 			auto t = TERM(str, i + 1, right);
 			
 			if(s.first && t.first) return make_pair(true, s.second + t.second);
 		}else if(str[i]=='-') { //compute subtraction if both s and t are valid expressions
-		    auto s = EXPR
-			(str, left, i-1);
+		    auto s = EXPR(str, left, i-1);
 			auto t = TERM(str, i + 1, right);
 			
 			if(s.first && t.first) return make_pair(true, s.second - t.second);
@@ -535,8 +536,7 @@ pair<bool, float> EXPR(const string& str, int left, int right) {
 
 //tries to compute good expression into single value and fails otherwise
 pair<bool, float> computeExpression(const string & s) {
-    return EXPR
-	(s,0,s.size()-1);
+    return EXPR(s,0,s.size()-1);
 }
 
 int main() {
