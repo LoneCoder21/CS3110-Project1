@@ -27,9 +27,10 @@ using namespace std;
 	4. len - returns length of digits (used for calculating fractional component)
 */
 
-pair<bool, float> S(const string& str, int left, int right);
-pair<bool, float> T(const string& str, int left, int right);
-pair<bool, float> F(const string& str, int left, int right);
+pair<bool, float> EXPR
+(const string& str, int left, int right);
+pair<bool, float> TERM(const string& str, int left, int right);
+pair<bool, float> FACTOR(const string& str, int left, int right);
 
 void print(const pair<bool, float>& p) //prints pair
 {
@@ -460,14 +461,15 @@ pair<bool, float> computeDFA(const string& s) {
 }
 
 //computes parenthesized expressions or evaluates expression as floating point
-pair<bool, float> F(const string& str, int left, int right) {
+pair<bool, float> FACTOR(const string& str, int left, int right) {
     string s = trim(str.substr(left,right-left+1));
     auto cd = computeDFA(s);
 	if(cd.first) return cd;
 	//evaluate expression if string is floating point value
 
 	if(s[0]=='(' && s.back()==')') { //see whether string is surrounded by parenthesis
-		auto csp = S(s,1,s.size()-2);
+		auto csp = EXPR
+		(s,1,s.size()-2);
 		
         if(csp.first) return make_pair(true, csp.second);
 	}
@@ -476,22 +478,22 @@ pair<bool, float> F(const string& str, int left, int right) {
     return make_pair(false,0);
 }
 
-//computes multiplication and division expressions or evaluates expression as F
-pair<bool, float> T(const string& str, int left, int right) {
-    auto f = F(str,left,right);
+//computes multiplication and division expressions or evaluates expression as FACTOR
+pair<bool, float> TERM(const string& str, int left, int right) {
+    auto f = FACTOR(str,left,right);
 	if(f.first) return f;
 	//evaluate expression if string is floating point value
 
 	for (int i = left; i < right; ++i) {
 		if (str[i] == '*') { //compute multiplication if both t and f are valid expressions
-			auto t = T(str, left, i-1);
-			auto f = F(str, i + 1, right);
+			auto t = TERM(str, left, i-1);
+			auto f = FACTOR(str, i + 1, right);
 			
 			if(t.first && f.first) return make_pair(true,t.second*f.second);
 			
 		}else if(str[i]=='/') { //compute division if both t and f are valid expressions
-		    auto t = T(str, left, i-1);
-			auto f = F(str, i + 1, right);
+		    auto t = TERM(str, left, i-1);
+			auto f = FACTOR(str, i + 1, right);
 			
 			float tdf = t.second/f.second;
 			
@@ -505,21 +507,23 @@ pair<bool, float> T(const string& str, int left, int right) {
 	return make_pair(false,0);
 }
 
-//computes addition and subtraction expressions or evaluates expression as T
-pair<bool, float> S(const string& str, int left, int right) {
-	auto t = T(str,left,right);
+//computes addition and subtraction expressions or evaluates expression as TERM
+pair<bool, float> EXPR(const string& str, int left, int right) {
+	auto t = TERM(str,left,right);
 	if(t.first) return t;
 	//evaluate expression if string is floating point value
 
 	for (int i = left; i < right; ++i) {
 		if (str[i] == '+') { //compute addition if both s and t are valid expressions
-			auto s = S(str, left, i-1);
-			auto t = T(str, i + 1, right);
+			auto s = EXPR
+			(str, left, i-1);
+			auto t = TERM(str, i + 1, right);
 			
 			if(s.first && t.first) return make_pair(true, s.second + t.second);
 		}else if(str[i]=='-') { //compute subtraction if both s and t are valid expressions
-		    auto s = S(str, left, i-1);
-			auto t = T(str, i + 1, right);
+		    auto s = EXPR
+			(str, left, i-1);
+			auto t = TERM(str, i + 1, right);
 			
 			if(s.first && t.first) return make_pair(true, s.second - t.second);
 		}
@@ -531,7 +535,8 @@ pair<bool, float> S(const string& str, int left, int right) {
 
 //tries to compute good expression into single value and fails otherwise
 pair<bool, float> computeExpression(const string & s) {
-    return S(s,0,s.size()-1);
+    return EXPR
+	(s,0,s.size()-1);
 }
 
 int main() {

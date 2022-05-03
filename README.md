@@ -15,8 +15,6 @@ Ran and compiled using C++17.
 Used g++ with ``` g++ project1.cpp ``` and run program.\
 Run project using any C++ compiler.
 
-
-
 #
 
 # CS3110-Project2
@@ -25,7 +23,7 @@ Run project using any C++ compiler.
 For this project, we decided that it was easier and safer to use CFG method for evaluating expressions. This is because we ran into lots of bugs while trying the PDA method. Initially, our CFG code was very slow as we converted original grammar to chomsky normal form and checked every splitted substring. The faster method doesn't use chomsky normal form and works on the original grammar.
 
 ### Additional/Specific Details:
-Each of the main functions in project 2 correspond to rules in the CFG. The functions return true and the floating point values if they succesfully splitted the string into each of the substitutions used for that rule in the CFG.
+Each of the main functions in project 2 correspond to rules in the CFG. The functions return true and the floating point values if they successfully splitted the string into at least one of the substitutions used for that rule in the CFG. To check for terminal a, we used project1 code and computed DFA to return possible floating point value. 
 
 Grammar used is:
 
